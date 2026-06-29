@@ -25,9 +25,9 @@ async function seed() {
     const hashedPassword = await bcrypt.hash('admin123', saltRounds);
 
     const usersToInsert = [
-      { username: 'admin', password: hashedPassword, role: 'admin' },
-      { username: 'principal', password: hashedPassword, role: 'principal' },
-      { username: 'teacher', password: hashedPassword, role: 'teacher' },
+      { username: 'admin', name: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ', email: 'admin@goodfuture.school', password: hashedPassword, role: 'admin' },
+      { username: 'principal', name: 'នាយកសាលា សុខ សុភា', email: 'principal@goodfuture.school', password: hashedPassword, role: 'principal' },
+      { username: 'teacher', name: 'គ្រូ ចាន់ រស្មី', email: 'teacher@goodfuture.school', password: hashedPassword, role: 'teacher' },
     ];
 
     console.log('Seeding users...');

@@ -1,25 +1,52 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, ilike, or } from 'drizzle-orm';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcryptjs';
 
-export async function GET(request) {
+// Helper: verify admin role
+async function verifyAdmin() {
   const cookieStore = await cookies();
   const role = cookieStore.get('user_role')?.value;
+  return role === 'admin';
+}
 
-  if (!role || role !== 'admin') {
+export async function GET(request) {
+  if (!(await verifyAdmin())) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const allUsers = await db.select({
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const role = searchParams.get('role');
+
+    let query = db.select({
       id: users.id,
+      username: users.username,
       name: users.name,
       email: users.email,
       role: users.role,
-      // excluding password
     }).from(users);
+
+    // Apply search filter
+    if (search) {
+      query = query.where(
+        or(
+          ilike(users.name, `%${search}%`),
+          ilike(users.email, `%${search}%`),
+          ilike(users.username, `%${search}%`)
+        )
+      );
+    }
+
+    // Apply role filter
+    if (role && role !== 'all') {
+      query = query.where(eq(users.role, role));
+    }
+
+    const allUsers = await query;
     
     return NextResponse.json({ success: true, data: allUsers });
   } catch (error) {
@@ -29,24 +56,36 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const cookieStore = await cookies();
-  const role = cookieStore.get('user_role')?.value;
-
-  if (!role || role !== 'admin') {
+  if (!(await verifyAdmin())) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const body = await request.json();
-    const { name, email, password, role: newRole } = body;
+    const { username, name, email, password, role: newRole } = body;
+
+    if (!username || !password) {
+      return NextResponse.json({ success: false, error: 'Username and password are required' }, { status: 400 });
+    }
+
+    // Check for duplicate username
+    const existing = await db.select({ id: users.id }).from(users).where(eq(users.username, username.trim().toLowerCase()));
+    if (existing.length > 0) {
+      return NextResponse.json({ success: false, error: 'ឈ្មោះគណនីនេះមានរួចហើយ (Username already exists)' }, { status: 409 });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await db.insert(users).values({
-      name,
-      email,
-      password,
+      username: username.trim().toLowerCase(),
+      name: name || '',
+      email: email || '',
+      password: hashedPassword,
       role: newRole || 'teacher'
     }).returning({
       id: users.id,
+      username: users.username,
       name: users.name,
       email: users.email,
       role: users.role
@@ -60,24 +99,24 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
-  const cookieStore = await cookies();
-  const role = cookieStore.get('user_role')?.value;
-
-  if (!role || role !== 'admin') {
+  if (!(await verifyAdmin())) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const body = await request.json();
-    const { id, name, email, password, role: newRole } = body;
+    const { id, username, name, email, password, role: newRole } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Missing user ID' }, { status: 400 });
     }
 
     const updateData = { name, email, role: newRole };
+    if (username) {
+      updateData.username = username.trim().toLowerCase();
+    }
     if (password) {
-      updateData.password = password; // In a real app, hash this!
+      updateData.password = await bcrypt.hash(password, 10);
     }
 
     const updatedUser = await db.update(users)
@@ -85,10 +124,15 @@ export async function PUT(request) {
       .where(eq(users.id, id))
       .returning({
         id: users.id,
+        username: users.username,
         name: users.name,
         email: users.email,
         role: users.role
       });
+
+    if (updatedUser.length === 0) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true, data: updatedUser[0] });
   } catch (error) {
@@ -98,10 +142,7 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
-  const cookieStore = await cookies();
-  const role = cookieStore.get('user_role')?.value;
-
-  if (!role || role !== 'admin') {
+  if (!(await verifyAdmin())) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -111,6 +152,15 @@ export async function DELETE(request) {
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Missing user ID' }, { status: 400 });
+    }
+
+    // Prevent deleting self
+    const cookieStore = await cookies();
+    const currentUsername = cookieStore.get('auth_token')?.value;
+    const targetUser = await db.select({ username: users.username }).from(users).where(eq(users.id, parseInt(id)));
+    
+    if (targetUser.length > 0 && targetUser[0].username === currentUsername) {
+      return NextResponse.json({ success: false, error: 'អ្នកមិនអាចលុបគណនីខ្លួនឯងបានទេ (Cannot delete your own account)' }, { status: 400 });
     }
 
     await db.delete(users).where(eq(users.id, parseInt(id)));
