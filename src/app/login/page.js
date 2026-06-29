@@ -134,15 +134,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="mb-6 p-4 bg-white/50 rounded-xl border border-white/80 text-xs text-slate-600 shadow-sm backdrop-blur-sm relative z-50">
-              <p className="font-bold text-slate-800 mb-2">គណនីសាកល្បង:</p>
-              <ul className="space-y-1 font-medium">
-                <li>រដ្ឋបាល: <span className="text-brand-blue font-bold">admin</span> / admin123</li>
-                <li>នាយកសាលា: <span className="text-brand-blue font-bold">principal</span> / admin123</li>
-                <li>គ្រូបង្រៀន: <span className="text-brand-blue font-bold">teacher</span> / admin123</li>
-                <li className="pt-1 mt-1 border-t border-slate-200/50">មាតាបិតា: <span className="text-brand-blue font-bold cursor-pointer" onClick={() => window.location.href = '/parents/login'}>ចុចលើប៊ូតុង "មាតាបិតា" ខាងលើ</span></li>
-              </ul>
-            </div>
+
             
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">

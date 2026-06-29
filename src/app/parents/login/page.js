@@ -97,10 +97,7 @@ export default function ParentLogin() {
             <button type="button" className="flex-1 py-2 text-sm font-bold bg-white text-indigo-600 rounded-lg shadow-sm text-center">មាតាបិតា (Parents)</button>
           </div>
 
-          <div className="mb-6 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50 text-xs text-slate-600 shadow-sm backdrop-blur-sm">
-            <p className="font-bold text-slate-800 mb-2">គណនីសាកល្បង:</p>
-            <p className="font-medium">សូមជ្រើសរើស <strong>ទី១០</strong> &gt; <strong>10A</strong> &gt; <strong>សុខ តារា</strong></p>
-          </div>
+
 
           <form className="space-y-6" onSubmit={handleLogin}>
             
