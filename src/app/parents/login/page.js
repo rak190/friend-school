@@ -77,7 +77,7 @@ export default function ParentLogin() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 bg-white rounded-[24px] shadow-xl flex items-center justify-center p-4">
-            <Image src="/logo.png" alt="School Logo" width={60} height={60} className="object-contain" />
+            <img src="/logo.png?v=1" alt="School Logo" width={60} height={60} className="object-contain" />
           </div>
         </div>
         <h2 className="text-center text-3xl font-black text-slate-800 tracking-tight">

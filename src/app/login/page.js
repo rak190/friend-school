@@ -69,7 +69,7 @@ export default function LoginPage() {
       {/* Navbar */}
       <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-slate-100 z-40 relative">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="School Logo" className="w-10 h-10 object-contain" />
+          <img src="/logo.png?v=1" alt="School Logo" className="w-10 h-10 object-contain" />
           <span className="text-xl font-extrabold text-slate-900 tracking-tight">អនាគតល្អ Good Future</span>
         </div>
         
