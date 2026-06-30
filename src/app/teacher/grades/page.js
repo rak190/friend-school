@@ -20,6 +20,8 @@ export default function TeacherGrades() {
   
   const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
   const [newSubject, setNewSubject] = useState('');
+  
+  const [sortBy, setSortBy] = useState('rank'); // 'name', 'total', 'rank'
 
   useEffect(() => {
     fetchClasses();
@@ -164,6 +166,44 @@ export default function TeacherGrades() {
     }
   };
 
+  // Compute Totals, Average, and Rank
+  const computedStudents = students.map(student => {
+    let totalScore = 0;
+    subjects.forEach(sub => {
+      const key = `${student.id}-${sub}`;
+      totalScore += Number(scores[key]?.homework || 0) + Number(scores[key]?.exam || 0);
+    });
+    const average = subjects.length > 0 ? (totalScore / subjects.length).toFixed(2) : 0;
+    return { ...student, totalScore, average: Number(average) };
+  });
+
+  // Calculate Rank based on Total Score (descending)
+  const sortedForRank = [...computedStudents].sort((a, b) => b.totalScore - a.totalScore);
+  sortedForRank.forEach((s, index) => {
+    const match = computedStudents.find(c => c.id === s.id);
+    if (match) {
+      // Handle ties by checking if previous student has same score
+      if (index > 0 && s.totalScore === sortedForRank[index - 1].totalScore) {
+        match.rank = sortedForRank[index - 1].rank; // Same rank as previous
+      } else {
+        match.rank = index + 1;
+      }
+    }
+  });
+
+  // Sort based on selected 'sortBy' option
+  if (sortBy === 'name') {
+    computedStudents.sort((a, b) => a.firstName.localeCompare(b.firstName)); // Sort by First Name
+  } else if (sortBy === 'total') {
+    computedStudents.sort((a, b) => b.totalScore - a.totalScore); // Highest total first
+  } else if (sortBy === 'rank') {
+    computedStudents.sort((a, b) => a.rank - b.rank); // Rank 1 first
+  }
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <>
       <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
@@ -176,9 +216,9 @@ export default function TeacherGrades() {
           </h1>
           <p className="text-sm font-medium text-brand-muted mt-1">បញ្ចូលពិន្ទុកិច្ចការផ្ទះ និងប្រឡងសម្រាប់គ្រប់មុខវិជ្ជា</p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <button className="bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-sm text-slate-600 font-bold hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm shrink-0">
-            <Download className="w-4 h-4" /> ទាញយក (Excel)
+        <div className="flex items-center gap-3 w-full md:w-auto print:hidden">
+          <button onClick={handlePrint} className="bg-white border border-slate-200 px-5 py-2.5 rounded-full shadow-sm text-slate-600 font-bold hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm shrink-0">
+            <Download className="w-4 h-4" /> ទាញយក PDF
           </button>
           <button onClick={handleSaveAll} disabled={isSaving || students.length === 0} className="bg-brand-blue px-6 py-2.5 rounded-full shadow-sm shadow-blue-200 text-white font-bold hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm disabled:opacity-50">
             <Save className="w-4 h-4" /> {isSaving ? 'កំពុងរក្សាទុក...' : 'រក្សាទុកទាំងអស់'}
@@ -210,11 +250,20 @@ export default function TeacherGrades() {
               {SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
+
+          <div className="flex-1 space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">តម្រៀបតាម</label>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm font-bold text-amber-700 focus:ring-2 focus:ring-amber-400 focus:bg-amber-100 outline-none">
+              <option value="rank">ចំណាត់ថ្នាក់ (Rank)</option>
+              <option value="total">ពិន្ទុសរុប (Total)</option>
+              <option value="name">ឈ្មោះសិស្ស (Name)</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Spreadsheet Grid */}
-      <div className="bg-white border border-slate-200 rounded-[24px] shadow-sm overflow-hidden flex flex-col relative">
+      <div className="bg-white border border-slate-200 rounded-[24px] shadow-sm overflow-hidden flex flex-col relative print:border-none print:shadow-none print:rounded-none">
         {loading && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
             <div className="text-brand-blue font-bold">កំពុងផ្ទុកទិន្នន័យ...</div>
@@ -239,7 +288,17 @@ export default function TeacherGrades() {
                     </th>
                   ))}
                   
-                  <th rowSpan={2} className="p-3 bg-slate-50 border-b border-slate-200 text-center font-bold text-slate-600 text-sm min-w-[150px]">
+                  <th rowSpan={2} className="p-3 bg-emerald-50 border-r border-b border-emerald-200 text-center font-bold text-emerald-700 text-sm w-24">
+                    សរុប
+                  </th>
+                  <th rowSpan={2} className="p-3 bg-blue-50 border-r border-b border-blue-200 text-center font-bold text-blue-700 text-sm w-24">
+                    មធ្យមភាគ
+                  </th>
+                  <th rowSpan={2} className="p-3 bg-amber-50 border-r border-b border-amber-200 text-center font-bold text-amber-700 text-sm w-24">
+                    ចំណាត់ថ្នាក់
+                  </th>
+
+                  <th rowSpan={2} className="p-3 bg-slate-50 border-b border-slate-200 text-center font-bold text-slate-600 text-sm min-w-[150px] print:hidden">
                     <button onClick={() => setShowAddSubjectModal(true)} className="flex items-center gap-1.5 mx-auto text-brand-blue bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
                       <Plus className="w-4 h-4" /> មុខវិជ្ជា
                     </button>
@@ -257,10 +316,10 @@ export default function TeacherGrades() {
                 </tr>
               </thead>
               <tbody>
-                {students.map((student, i) => (
+                {computedStudents.map((student, i) => (
                   <tr key={student.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors group">
                     <td className="p-3 border-r border-slate-100 text-center font-semibold text-slate-400 text-sm bg-white group-hover:bg-slate-50/50 sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{i + 1}</td>
-                    <td className="p-3 border-r border-slate-100 font-bold text-slate-700 text-sm bg-white group-hover:bg-slate-50/50 sticky left-16 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                    <td className="p-3 border-r border-slate-100 font-bold text-slate-700 text-sm bg-white group-hover:bg-slate-50/50 sticky left-16 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] min-w-[200px]">
                       {student.lastName} {student.firstName}
                     </td>
                     
@@ -269,16 +328,21 @@ export default function TeacherGrades() {
                       const hwScore = scores[key]?.homework ?? '';
                       const exScore = scores[key]?.exam ?? '';
                       
+                      const hwFailing = hwScore !== '' && hwScore < 25; // Assuming max is 50? Wait, let's just say exam < 50 is failing
+                      const exFailing = exScore !== '' && exScore < 25; 
+                      const totalSubScore = (hwScore || 0) + (exScore || 0);
+                      const isFailing = totalSubScore < 50 && (hwScore !== '' || exScore !== '');
+                      
                       return (
                         <td key={`${idx}-inputs`} className="p-0 border-r border-slate-100">
-                          <div className="flex h-full w-[160px]">
+                          <div className={`flex h-full w-[160px] ${isFailing ? 'bg-rose-50' : ''}`}>
                             <div className="flex-1 border-r border-slate-100">
                               <input 
                                 type="number" 
                                 min="0" max="100"
                                 value={hwScore}
                                 onChange={(e) => handleScoreChange(student.id, sub, 'homework', e.target.value)}
-                                className="w-full h-full min-h-[48px] p-2 text-center text-sm font-semibold text-slate-600 bg-transparent focus:bg-blue-50 focus:outline-none focus:ring-inset focus:ring-2 focus:ring-brand-blue"
+                                className={`w-full h-full min-h-[48px] p-2 text-center text-sm font-semibold bg-transparent focus:bg-blue-50 focus:outline-none focus:ring-inset focus:ring-2 focus:ring-brand-blue ${hwFailing ? 'text-rose-600' : 'text-slate-600'}`}
                                 placeholder="-"
                               />
                             </div>
@@ -288,7 +352,7 @@ export default function TeacherGrades() {
                                 min="0" max="100"
                                 value={exScore}
                                 onChange={(e) => handleScoreChange(student.id, sub, 'exam', e.target.value)}
-                                className="w-full h-full min-h-[48px] p-2 text-center text-sm font-bold text-amber-700 bg-transparent focus:bg-amber-100 focus:outline-none focus:ring-inset focus:ring-2 focus:ring-amber-500"
+                                className={`w-full h-full min-h-[48px] p-2 text-center text-sm font-bold bg-transparent focus:bg-amber-100 focus:outline-none focus:ring-inset focus:ring-2 focus:ring-amber-500 ${exFailing ? 'text-rose-600' : 'text-amber-700'}`}
                                 placeholder="-"
                               />
                             </div>
@@ -296,7 +360,19 @@ export default function TeacherGrades() {
                         </td>
                       );
                     })}
-                    <td className="p-3"></td>
+                    
+                    {/* Computed Columns */}
+                    <td className="p-3 border-r border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 text-sm">
+                      {student.totalScore}
+                    </td>
+                    <td className="p-3 border-r border-slate-100 text-center font-bold text-blue-600 bg-blue-50/30 text-sm">
+                      {student.average}
+                    </td>
+                    <td className="p-3 border-r border-slate-100 text-center font-bold text-amber-600 bg-amber-50/30 text-sm text-lg">
+                      {student.rank}
+                    </td>
+
+                    <td className="p-3 print:hidden"></td>
                   </tr>
                 ))}
               </tbody>
