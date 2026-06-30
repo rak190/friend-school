@@ -4,7 +4,7 @@ import { users, classes, students, attendance, scores } from '@/db/schema';
 import { eq, inArray, sql, desc, and } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
-export async function GET() {
+export async function GET(request) {
   const cookieStore = await cookies();
   const role = cookieStore.get('user_role')?.value;
   const username = cookieStore.get('auth_token')?.value;
@@ -193,6 +193,6 @@ export async function GET() {
 
   } catch (error) {
     console.error('Failed to fetch teacher dashboard data:', error);
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message, stack: error.stack }, { status: 500 });
   }
 }
