@@ -67,11 +67,12 @@ export default function AIPage() {
         const data = await res.json();
         setAiOutput(data.text || data.error);
       } else {
-        setAiOutput('ការបង្កើតបរាជ័យ។ សូមព្យាយាមម្តងទៀត។');
+        const errData = await res.json().catch(() => null);
+        setAiOutput(`ការបង្កើតបរាជ័យ។ (Error: ${errData?.error || res.statusText}) សូមពិនិត្យមើល API Key របស់អ្នកនៅលើ Vercel ម្តងទៀត។`);
       }
     } catch (e) {
       console.error(e);
-      setAiOutput('មានបញ្ហាក្នុងពេលបង្កើត។');
+      setAiOutput(`មានបញ្ហាក្នុងពេលបង្កើត៖ ${e.message}`);
     }
     setLoading(false);
   };

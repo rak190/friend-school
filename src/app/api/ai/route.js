@@ -14,7 +14,7 @@ export async function POST(request) {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     let structureInstructions = "";
     if (materialType === 'មេរៀនសង្ខេប') {
@@ -83,6 +83,6 @@ Make the content directly usable by a teacher in a classroom. Do not output any 
 
   } catch (error) {
     console.error("Error generating AI content:", error);
-    return NextResponse.json({ error: "Failed to generate content" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to generate content" }, { status: 500 });
   }
 }
