@@ -31,12 +31,17 @@ export default function TeacherGrades() {
     if (selectedClassId) {
       const cls = classes.find(c => c.id.toString() === selectedClassId);
       if (cls) {
-        const parsedSubjects = cls.gradeSubjects ? cls.gradeSubjects.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const parsedSubjects = cls.gradeSubjects ? cls.gradeSubjects.split(',').map(s => s.trim()).filter(Boolean) : ['អង់គ្លេស'];
         setSubjects(parsedSubjects);
       }
+    }
+  }, [selectedClassId, classes]);
+
+  useEffect(() => {
+    if (selectedClassId) {
       fetchDataForClass();
     }
-  }, [selectedClassId, selectedMonth, selectedSemester, classes]);
+  }, [selectedClassId, selectedMonth, selectedSemester]);
 
   const fetchClasses = async () => {
     try {

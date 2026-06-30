@@ -69,6 +69,7 @@ export async function POST(request) {
       subject,
       schedule,
       color: color || 'bg-brand-blue',
+      gradeSubjects: 'អង់គ្លេស',
       progress: 0,
       teacherId
     }).returning();
