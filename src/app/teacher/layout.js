@@ -13,11 +13,28 @@ export default function TeacherLayout({ children }) {
   const [leftMenuOpen, setLeftMenuOpen] = useState(false);
   const [rightMenuOpen, setRightMenuOpen] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) setCurrentUser(json.data);
+        }
+      } catch (e) {
+        console.error('Failed to fetch user:', e);
+      }
+    };
+    fetchUser();
+  }, []);
     const fetchEvents = async () => {
       try {
         const res = await fetch('/api/announcements');
@@ -64,6 +81,45 @@ export default function TeacherLayout({ children }) {
     { href: '/teacher/grades', icon: FileEdit, label: 'ពិន្ទុ និងប្រឡង' },
     { href: '/teacher/news', icon: Bell, label: 'ដំណឹងសាលា' },
   ];
+
+  // Calendar Logic
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+  
+  const currentYear = calendarDate.getFullYear();
+  const currentMonth = calendarDate.getMonth();
+  
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDay = getFirstDayOfMonth(currentYear, currentMonth); // 0 (Sun) to 6 (Sat)
+  
+  // Adjust so Monday is 0, Sunday is 6
+  let startingDay = firstDay === 0 ? 6 : firstDay - 1; 
+
+  const days = [];
+  const daysInPrevMonth = getDaysInMonth(currentYear, currentMonth - 1);
+  
+  // Previous month padding
+  for (let i = 0; i < startingDay; i++) {
+    days.push({ day: daysInPrevMonth - startingDay + i + 1, type: 'prev' });
+  }
+  
+  // Current month
+  const today = new Date();
+  for (let i = 1; i <= daysInMonth; i++) {
+    const isToday = today.getDate() === i && today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+    days.push({ day: i, type: 'current', isToday });
+  }
+
+  // Next month padding (to complete 42 days grid for consistent height)
+  const remainingCells = 42 - days.length;
+  for (let i = 1; i <= remainingCells; i++) {
+    days.push({ day: i, type: 'next' });
+  }
+
+  const prevMonth = () => setCalendarDate(new Date(currentYear, currentMonth - 1, 1));
+  const nextMonth = () => setCalendarDate(new Date(currentYear, currentMonth + 1, 1));
+  
+  const khmerMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
 
   return (
     <div className="bg-white h-screen w-full flex flex-col lg:flex-row overflow-hidden font-sans text-brand-text selection:bg-brand-blue/30 relative">
@@ -147,9 +203,13 @@ export default function TeacherLayout({ children }) {
         {/* User Info */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-yellow flex items-center justify-center text-yellow-900 font-bold border-2 border-white shadow-sm shrink-0">NR</div>
+            <div className="w-10 h-10 rounded-full bg-brand-yellow flex items-center justify-center text-yellow-900 font-bold border-2 border-white shadow-sm shrink-0 uppercase">
+              {currentUser ? currentUser.firstName?.[0] : 'U'}
+            </div>
             <div>
-              <h4 className="font-bold text-slate-800 text-sm">Norak Run</h4>
+              <h4 className="font-bold text-slate-800 text-sm truncate max-w-[120px]">
+                {currentUser ? `${currentUser.lastName} ${currentUser.firstName}` : 'កំពុងដំណើរការ...'}
+              </h4>
               <p className="text-xs text-brand-muted">គ្រូបង្រៀន</p>
             </div>
           </div>
@@ -159,24 +219,30 @@ export default function TeacherLayout({ children }) {
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-8 select-none">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-slate-800">កក្កដា 2026</h3>
+            <h3 className="font-bold text-slate-800">{khmerMonths[currentMonth]} {currentYear}</h3>
             <div className="flex gap-2">
-              <ChevronLeft className="w-4 h-4 text-slate-400" />
-              <ChevronRight className="w-4 h-4 text-slate-800" />
+              <button onClick={prevMonth} className="hover:bg-slate-100 p-1 rounded-full transition-colors"><ChevronLeft className="w-4 h-4 text-slate-400" /></button>
+              <button onClick={nextMonth} className="hover:bg-slate-100 p-1 rounded-full transition-colors"><ChevronRight className="w-4 h-4 text-slate-800" /></button>
             </div>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2 font-semibold text-brand-muted">
-            <div>អា</div><div>ច</div><div>អ</div><div>ព</div><div>ព្រ</div><div>សុ</div><div>ស</div>
+            <div>ច</div><div>អ</div><div>ព</div><div>ព្រ</div><div>សុ</div><div>ស</div><div>អា</div>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-slate-800">
-            <div className="text-slate-300 py-1.5">29</div><div className="text-slate-300 py-1.5">30</div>
-            <div className="py-1.5">1</div><div className="py-1.5">2</div><div className="py-1.5">3</div><div className="py-1.5">4</div><div className="py-1.5">5</div>
-            <div className="py-1.5">6</div><div className="py-1.5">7</div><div className="py-1.5">8</div><div className="py-1.5">9</div>
-            <div className="bg-brand-blue text-white rounded-full py-1.5 shadow-md shadow-blue-200">10</div>
-            <div className="py-1.5">11</div><div className="py-1.5">12</div>
-            <div className="py-1.5">13</div><div className="py-1.5">14</div><div className="py-1.5">15</div><div className="py-1.5">16</div><div className="py-1.5">17</div><div className="py-1.5">18</div><div className="py-1.5">19</div>
+          <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium">
+            {days.map((d, i) => (
+              <div 
+                key={i} 
+                className={`py-1.5 rounded-full ${
+                  d.type !== 'current' ? 'text-slate-300' : 
+                  d.isToday ? 'bg-brand-blue text-white shadow-md shadow-blue-200 font-bold' : 
+                  'text-slate-700 hover:bg-slate-50 cursor-pointer'
+                }`}
+              >
+                {d.day}
+              </div>
+            ))}
           </div>
         </div>
 
