@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Users, Edit, Trash2, Plus, X, BookOpen, Clock, UserPlus, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Users, Edit, Trash2, Plus, X, BookOpen, Clock, UserPlus, Loader2, CheckCircle, AlertCircle, Download, Upload } from 'lucide-react';
 
 export default function ClassDetails() {
   const { id } = useParams();
@@ -22,9 +22,33 @@ export default function ClassDetails() {
   const [studentForm, setStudentForm] = useState({ firstName: '', lastName: '', gender: 'ប្រុស' });
   const [unassignedStudents, setUnassignedStudents] = useState([]);
   const [selectedUnassignedId, setSelectedUnassignedId] = useState('');
-  const [addMethod, setAddMethod] = useState('new'); // 'new', 'existing', or 'bulk'
+  const [addMethod, setAddMethod] = useState('new'); // 'new', 'existing', 'bulk', or 'csv'
   const [bulkInput, setBulkInput] = useState('');
+  const [csvFile, setCsvFile] = useState(null);
   const [isSavingStudent, setIsSavingStudent] = useState(false);
+
+  const handleExportTemplate = () => {
+    const headers = "នាមត្រកូល,នាមខ្លួន,ភេទ\n";
+    const sampleRows = "សុខ,តារា,ប្រុស\nចាន់,ធីតា,ស្រី\n";
+    // Prefix with BOM for Excel UTF-8 support
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + headers + sampleRows;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "student-template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const parseCSVFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (err) => reject(err);
+      reader.readAsText(file);
+    });
+  };
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -154,6 +178,61 @@ export default function ClassDetails() {
           } else {
             showToast('មិនអាចបន្ថែមសិស្សបានទេ', 'error');
           }
+        } else if (addMethod === 'csv') {
+           if (!csvFile) {
+             showToast('សូមជ្រើសរើសឯកសារ CSV', 'error');
+             setIsSavingStudent(false);
+             return;
+           }
+           try {
+             const text = await parseCSVFile(csvFile);
+             const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '');
+             const studentsArray = [];
+             
+             let startIdx = 0;
+             if (lines.length > 0 && (lines[0].includes('នាម') || lines[0].includes('Name') || lines[0].includes('ភេទ'))) {
+               startIdx = 1;
+             }
+
+             for (let i = startIdx; i < lines.length; i++) {
+               const parts = lines[i].split(',').map(p => p.trim());
+               if (parts.length >= 3) {
+                 const lastName = parts[0];
+                 const firstName = parts[1];
+                 let genderRaw = parts[2];
+                 let gender = 'ប្រុស';
+                 if (['ស្រី', 'F', 'f', 'female', 'Female'].includes(genderRaw)) gender = 'ស្រី';
+                 
+                 if (lastName && firstName) {
+                   studentsArray.push({ lastName, firstName, gender, classId: Number(id) });
+                 }
+               }
+             }
+
+             if (studentsArray.length === 0) {
+               showToast('មិនមានទិន្នន័យត្រឹមត្រូវក្នុងឯកសារនេះទេ', 'error');
+               setIsSavingStudent(false);
+               return; 
+             }
+
+             const res = await fetch('/api/students', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ students: studentsArray })
+             });
+             
+             if (res.ok) {
+               fetchClassDetails();
+               setShowStudentModal(false);
+               showToast(`បញ្ជូលសិស្សចំនួន ${studentsArray.length} នាក់ជោគជ័យ`);
+               setCsvFile(null);
+             } else {
+               showToast('មិនអាចបញ្ជូលសិស្សបានទេ', 'error');
+             }
+           } catch (err) {
+             console.error('File reading failed', err);
+             showToast('មានបញ្ហាក្នុងការអានឯកសារ', 'error');
+           }
         } else if (addMethod === 'existing' && selectedUnassignedId) {
           // Assign existing student to this class
           const res = await fetch(`/api/students/${selectedUnassignedId}`, {
@@ -329,14 +408,19 @@ export default function ClassDetails() {
           <div className="bg-white rounded-[24px] border border-slate-100 p-6 shadow-sm h-full flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-bold text-slate-800 text-lg">បញ្ជីសិស្ស ({classData.students?.length || 0})</h3>
-              <button onClick={() => {
-                setStudentModalMode('add');
-                setAddMethod('new');
-                setStudentForm({ firstName: '', lastName: '', gender: 'ប្រុស' });
-                setShowStudentModal(true);
-              }} className="bg-brand-yellow text-yellow-900 px-4 py-2 rounded-full font-bold text-sm hover:bg-yellow-400 transition-colors flex items-center gap-2">
-                <UserPlus className="w-4 h-4" /> បន្ថែមសិស្ស
-              </button>
+              <div className="flex gap-2">
+                <button onClick={handleExportTemplate} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-full font-bold text-sm hover:bg-slate-200 transition-colors flex items-center gap-2">
+                  <Download className="w-4 h-4" /> ទាញយកគំរូ CSV
+                </button>
+                <button onClick={() => {
+                  setStudentModalMode('add');
+                  setAddMethod('new');
+                  setStudentForm({ firstName: '', lastName: '', gender: 'ប្រុស' });
+                  setShowStudentModal(true);
+                }} className="bg-brand-yellow text-yellow-900 px-4 py-2 rounded-full font-bold text-sm hover:bg-yellow-400 transition-colors flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" /> បន្ថែមសិស្ស
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -394,9 +478,10 @@ export default function ClassDetails() {
               
               {studentModalMode === 'add' && (
                 <div className="flex bg-slate-100 p-1 rounded-xl mb-4 overflow-x-auto whitespace-nowrap hide-scrollbar">
-                  <button type="button" onClick={() => setAddMethod('new')} className={`flex-1 min-w-[100px] py-2 px-3 text-xs font-bold rounded-lg transition-colors ${addMethod === 'new' ? 'bg-white shadow-sm text-brand-blue' : 'text-slate-500'}`}>សិស្សថ្មី</button>
-                  <button type="button" onClick={() => setAddMethod('bulk')} className={`flex-1 min-w-[100px] py-2 px-3 text-xs font-bold rounded-lg transition-colors ${addMethod === 'bulk' ? 'bg-white shadow-sm text-brand-blue' : 'text-slate-500'}`}>បញ្ជូលច្រើននាក់</button>
-                  <button type="button" onClick={() => setAddMethod('existing')} className={`flex-1 min-w-[100px] py-2 px-3 text-xs font-bold rounded-lg transition-colors ${addMethod === 'existing' ? 'bg-white shadow-sm text-brand-blue' : 'text-slate-500'}`}>ជ្រើសរើស</button>
+                  <button type="button" onClick={() => setAddMethod('new')} className={`flex-1 min-w-[80px] py-2 px-2 text-xs font-bold rounded-lg transition-colors ${addMethod === 'new' ? 'bg-white shadow-sm text-brand-blue' : 'text-slate-500'}`}>សិស្សថ្មី</button>
+                  <button type="button" onClick={() => setAddMethod('bulk')} className={`flex-1 min-w-[80px] py-2 px-2 text-xs font-bold rounded-lg transition-colors ${addMethod === 'bulk' ? 'bg-white shadow-sm text-brand-blue' : 'text-slate-500'}`}>បញ្ជូលជាជួរ</button>
+                  <button type="button" onClick={() => setAddMethod('csv')} className={`flex-1 min-w-[80px] py-2 px-2 text-xs font-bold rounded-lg transition-colors ${addMethod === 'csv' ? 'bg-white shadow-sm text-brand-blue' : 'text-slate-500'}`}>ឯកសារ CSV</button>
+                  <button type="button" onClick={() => setAddMethod('existing')} className={`flex-1 min-w-[80px] py-2 px-2 text-xs font-bold rounded-lg transition-colors ${addMethod === 'existing' ? 'bg-white shadow-sm text-brand-blue' : 'text-slate-500'}`}>ជ្រើសរើស</button>
                 </div>
               )}
 
@@ -424,6 +509,23 @@ export default function ClassDetails() {
                     placeholder="សុខ តារា ប្រុស&#10;ចាន់ ធីតា ស្រី"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-brand-blue focus:bg-white resize-none"
                   ></textarea>
+                </div>
+              ) : studentModalMode === 'add' && addMethod === 'csv' ? (
+                <div className="space-y-4">
+                  <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                    <p className="text-xs text-blue-800 font-medium leading-relaxed">
+                      សូមជ្រើសរើសឯកសារ <strong className="font-bold">.csv</strong> ។ ប្រព័ន្ធនឹងរំលងជួរដែលមានទិន្នន័យមិនពេញលេញដោយស្វ័យប្រវត្តិ។
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase">ជ្រើសរើសឯកសារ CSV</label>
+                    <input 
+                      type="file" 
+                      accept=".csv"
+                      onChange={(e) => setCsvFile(e.target.files[0])}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-brand-blue focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-brand-blue hover:file:bg-blue-100 cursor-pointer"
+                    />
+                  </div>
                 </div>
               ) : (
                 <>
