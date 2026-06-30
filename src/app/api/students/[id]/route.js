@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
 export async function PUT(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
   const cookieStore = await cookies();
   const role = cookieStore.get('user_role')?.value;
 
@@ -41,7 +41,7 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
   const cookieStore = await cookies();
   const role = cookieStore.get('user_role')?.value;
 
