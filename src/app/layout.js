@@ -7,7 +7,7 @@ const kantumruy = Kantumruy_Pro({
 });
 
 export const metadata = {
-  title: "អនាគតល្អ Good Future",
+  title: "សាលារៀន School",
   description: "ប្រព័ន្ធគ្រប់គ្រងសាលារៀន",
 };
 

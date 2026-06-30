@@ -104,7 +104,7 @@ export default function PrincipalOverviewPage() {
 
       {/* Footer Text */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 text-xs font-semibold text-brand-muted mt-auto pt-6 justify-between items-center text-center sm:text-left">
-        <div>រក្សាសិទ្ធិគ្រប់យ៉ាង © 2026 អនាគតល្អ Good Future <span className="hidden sm:inline mx-4">គោលការណ៍ឯកជនភាព</span> <span className="hidden sm:inline mx-4">លក្ខខណ្ឌប្រើប្រាស់</span> <span className="hidden sm:inline">ទំនាក់ទំនង</span></div>
+        <div>រក្សាសិទ្ធិគ្រប់យ៉ាង © 2026 សាលារៀន School <span className="hidden sm:inline mx-4">គោលការណ៍ឯកជនភាព</span> <span className="hidden sm:inline mx-4">លក្ខខណ្ឌប្រើប្រាស់</span> <span className="hidden sm:inline">ទំនាក់ទំនង</span></div>
         <div className="flex gap-3">
           <Globe className="w-4 h-4" />
           <MessageCircle className="w-4 h-4" />

@@ -70,7 +70,7 @@ export default function LoginPage() {
       <nav className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-slate-100 z-40 relative">
         <div className="flex items-center gap-3">
           <img src="/logo.png?v=1" alt="School Logo" className="w-10 h-10 object-contain" />
-          <span className="text-xl font-extrabold text-slate-900 tracking-tight">អនាគតល្អ Good Future</span>
+          <span className="text-xl font-extrabold text-slate-900 tracking-tight">សាលារៀន School</span>
         </div>
         
         <div className="hidden md:block absolute left-1/2 -translate-x-1/2 font-bold text-slate-700">
@@ -209,7 +209,7 @@ export default function LoginPage() {
       
       {/* Footer */}
       <footer className="bg-slate-900 py-8 px-6 text-center text-slate-400 text-sm font-medium z-30 relative">
-        <p>&copy; {new Date().getFullYear()} អនាគតល្អ Good Future. រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
+        <p>&copy; {new Date().getFullYear()} សាលារៀន School. រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
       </footer>
     </div>
   );

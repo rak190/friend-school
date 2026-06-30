@@ -163,7 +163,7 @@ export default function TeacherLayout({ children }) {
       <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-100 z-50 shrink-0 relative">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="School Logo" className="w-8 h-8 object-contain" />
-          <span className="text-xl font-extrabold text-slate-900 tracking-tight">Good Future</span>
+          <span className="text-xl font-extrabold text-slate-900 tracking-tight">សាលារៀន School</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -185,7 +185,7 @@ export default function TeacherLayout({ children }) {
           {/* Logo (Desktop Only) */}
           <div className="hidden lg:flex items-center gap-2 mb-10 pl-2">
             <img src="/logo.png" alt="School Logo" className="w-8 h-8 object-contain" />
-            <span className="text-xl font-extrabold text-slate-900 tracking-tight">អនាគតល្អ Good Future</span>
+            <span className="text-xl font-extrabold text-slate-900 tracking-tight">សាលារៀន School</span>
           </div>
           
           <nav className="space-y-2">
