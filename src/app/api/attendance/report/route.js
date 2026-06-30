@@ -47,7 +47,9 @@ export async function GET(request) {
 
     // 2. Fetch attendance for this month
     const startDate = `${month}-01`;
-    const endDate = `${month}-31`; // Simplified, works for string comparison
+    const [yearStr, mStr] = month.split('-');
+    const lastDay = new Date(Number(yearStr), Number(mStr), 0).getDate();
+    const endDate = `${month}-${lastDay}`;
 
     const attendanceRecords = await db.select().from(attendance)
       .where(
