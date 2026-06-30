@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users, classes, students, attendance, scores } from '@/db/schema';
-import { eq, inArray, sql, desc } from 'drizzle-orm';
+import { eq, inArray, sql, desc, and } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
 export async function GET() {
