@@ -301,6 +301,7 @@ export default function TeacherAttendance() {
                 </button>
               </div>
             </>
+            )
           ) : (
             <>
               {/* Report Tab Content */}
