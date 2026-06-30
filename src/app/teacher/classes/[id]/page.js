@@ -480,7 +480,7 @@ export default function ClassDetails() {
               </table>
             </div>
           </div>
-      </div>
+        
 
       {/* Student Modal */}
       {showStudentModal && (
