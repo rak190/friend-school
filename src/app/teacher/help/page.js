@@ -209,22 +209,22 @@ export default function TeacherHelp() {
       )}
 
       {/* Contact Support */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
-        <div className="bg-slate-50 rounded-[24px] border border-slate-200 p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-center sm:text-left">
-            <h3 className="font-bold text-slate-800 text-lg mb-2">នៅតែត្រូវការជំនួយមែនទេ?</h3>
-            <p className="text-sm text-slate-500 mb-4 sm:mb-0">ទាក់ទងមកកាន់ក្រុមការងារបច្ចេកទេសរបស់យើងដោយផ្ទាល់។</p>
+      <div className="pb-20">
+        <div className="bg-slate-50 rounded-[24px] border border-slate-200 p-6 md:p-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className="text-center lg:text-left flex-1">
+            <h3 className="font-bold text-slate-800 text-xl mb-2 whitespace-nowrap">នៅតែត្រូវការជំនួយមែនទេ?</h3>
+            <p className="text-sm text-slate-500">ទាក់ទងមកកាន់ក្រុមការងារបច្ចេកទេសរបស់យើងដោយផ្ទាល់។</p>
           </div>
-          <div className="flex gap-4">
-            <a href="tel:+85512345678" className="bg-white border border-slate-200 p-3 rounded-full text-brand-blue shadow-sm hover:bg-blue-50 transition-transform hover:scale-110">
+          <div className="flex flex-wrap items-center justify-center gap-4 shrink-0">
+            <a href="tel:+85512345678" className="bg-white border border-slate-200 p-3.5 rounded-full text-brand-blue shadow-sm hover:bg-blue-50 transition-transform hover:scale-110">
               <Phone className="w-5 h-5" />
             </a>
-            <a href="mailto:support@goodfuture.edu.kh" className="bg-white border border-slate-200 p-3 rounded-full text-brand-blue shadow-sm hover:bg-blue-50 transition-transform hover:scale-110">
+            <a href="mailto:support@goodfuture.edu.kh" className="bg-white border border-slate-200 p-3.5 rounded-full text-brand-blue shadow-sm hover:bg-blue-50 transition-transform hover:scale-110">
               <Mail className="w-5 h-5" />
             </a>
             <button 
               onClick={() => setIsChatOpen(true)}
-              className="bg-brand-blue text-white font-bold px-6 py-3 rounded-full shadow-sm shadow-blue-200 flex items-center gap-2 hover:bg-blue-600 transition-transform hover:scale-105"
+              className="bg-brand-blue text-white font-bold px-8 py-3.5 rounded-full shadow-sm shadow-blue-200 flex items-center gap-2 hover:bg-blue-600 transition-transform hover:scale-105 whitespace-nowrap"
             >
               <MessageCircle className="w-5 h-5" /> ជជែកផ្ទាល់
             </button>
